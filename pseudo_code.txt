@@ -1,0 +1,101 @@
+ALGORITHME A_star_puzzle_resolution
+    INPUT: état_initial, état_final
+    OUTPUT: chemin_de_la_solution (ou "Pas de solution" si impossible)
+
+    DEBUT
+        # Initialiser la liste ouverte (open list) et la liste fermée (closed list)
+        ouvrir_liste ← file_priorité_vide()  # file de priorité (tas de priorité)
+        fermer_liste ← ensemble_vide()       # ensemble des états déjà explorés
+        
+        # Ajouter l'état initial dans la liste ouverte avec un coût de 0
+        coût_initial ← 0
+        heuristique_initiale ← calculer_heuristique(état_initial, état_final)
+        ajouter(ouvrir_liste, (coût_initial + heuristique_initiale, état_initial, coût_initial, NULL))
+
+        TANT QUE ouvrir_liste n'est pas vide FAIRE
+            # Extraire l'état avec le coût le plus faible de la liste ouverte
+            (f, état_courant, coût_actuel, parent) ← extraire_min(ouvrir_liste)
+
+            # Si l'état courant est l'état final, nous avons trouvé la solution
+            SI état_courant = état_final ALORS
+                retourner chemin_reconstruit(état_courant, parent)
+
+            # Ajouter l'état courant à la liste fermée
+            ajouter(fermer_liste, état_courant)
+
+            # Générer les voisins de l'état courant
+            POUR CHAQUE voisin DANS générer_voisins(état_courant) FAIRE
+                # Si le voisin est déjà exploré, passer au suivant
+                SI voisin DANS fermer_liste ALORS CONTINUER
+
+                # Calculer le coût g(n) pour atteindre le voisin
+                coût_voisin ← coût_actuel + 1
+
+                # Calculer l'heuristique h(n) du voisin (ex. distance de Manhattan)
+                heuristique_voisin ← calculer_heuristique(voisin, état_final)
+
+                # Ajouter le voisin dans la liste ouverte avec son coût total f(n)
+                ajouter(ouvrir_liste, (coût_voisin + heuristique_voisin, voisin, coût_voisin, état_courant))
+
+        FIN TANT QUE
+
+        # Si la liste ouverte est vide et qu'on n'a pas trouvé l'état final
+        retourner "Pas de solution"
+    FIN
+
+ALGORITHME générer_voisins
+    INPUT: état_courant
+    OUTPUT: liste_des_voisins
+
+    DEBUT
+        position_vide ← trouver_position_vide(état_courant)
+        voisins ← liste_vide()
+
+        # Vérifier les mouvements possibles (haut, bas, gauche, droite)
+        SI déplacement_possible(HAUT) ALORS
+            voisin ← créer_nouvel_état(état_courant, déplacer_vide(HAUT))
+            ajouter(voisins, voisin)
+
+        SI déplacement_possible(BAS) ALORS
+            voisin ← créer_nouvel_état(état_courant, déplacer_vide(BAS))
+            ajouter(voisins, voisin)
+
+        SI déplacement_possible(GAUCHE) ALORS
+            voisin ← créer_nouvel_état(état_courant, déplacer_vide(GAUCHE))
+            ajouter(voisins, voisin)
+
+        SI déplacement_possible(DROITE) ALORS
+            voisin ← créer_nouvel_état(état_courant, déplacer_vide(DROITE))
+            ajouter(voisins, voisin)
+
+        retourner voisins
+    FIN
+
+ALGORITHME calculer_heuristique
+    INPUT: état, état_final
+    OUTPUT: heuristique (distance de Manhattan)
+
+    DEBUT
+        distance_totale ← 0
+        POUR i = 1 À n FAIRE
+            POUR j = 1 À n FAIRE
+                tuile ← état[i][j]
+                SI tuile ≠ 0 ALORS
+                    position_finale ← trouver_position(état_final, tuile)
+                    distance_totale ← distance_totale + abs(i - position_finale.x) + abs(j - position_finale.y)
+        FIN POUR
+        retourner distance_totale
+    FIN
+
+ALGORITHME chemin_reconstruit
+    INPUT: état_final, parent
+    OUTPUT: chemin_solution
+
+    DEBUT
+        chemin ← liste_vide()
+        TANT QUE état_final ≠ NULL FAIRE
+            ajouter_en_tête(chemin, état_final)
+            état_final ← parent[état_final]
+        FIN TANT QUE
+        retourner chemin
+    FIN
